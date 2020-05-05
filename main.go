@@ -58,9 +58,9 @@ func main() {
 			if !f.Generate {
 				continue
 			}
-			generator.GenerateFile(gen, f)
+			generator.GenerateNativeFile(gen, f)
+			generator.GenerateIncludeFile(gen, f)
 			if natives {
-				generator.GenerateNativeFiles(gen, f)
 			}
 		}
 		gen.SupportedFeatures = generator.SupportedFeatures

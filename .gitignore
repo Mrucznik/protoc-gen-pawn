@@ -23,4 +23,5 @@ protoc-gen-pawn
 # Generated .cpp, .pwn and .amx files
 *.cpp
 *.pwn
+*.inc
 *.amx

@@ -20,8 +20,7 @@ func GenerateIncludeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Ge
 
 	g.P("// ---------- Messages ----------")
 	for _, message := range file.Messages {
-		//TODO
-		g.P(message.GoIdent.GoName)
+		genMessages(g, message)
 	}
 
 	g.P("// ---------- Natives ----------")
@@ -29,7 +28,65 @@ func GenerateIncludeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Ge
 		genNatives(g, service)
 	}
 
+	g.P("// ---------- Callbacks ----------")
+	for _, service := range file.Services {
+		genCallbacks(g, service)
+	}
+
 	return g
+}
+
+func genEnum(g *protogen.GeneratedFile, enum *protogen.Enum) {
+	g.P(enum.Comments.Leading, "enum ", enum.Desc.Name())
+	g.P("{")
+	for idx, value := range enum.Values {
+		genEnumValue(g, value, idx == len(enum.Values)-1)
+	}
+	g.P("};")
+}
+
+func genEnumValue(g *protogen.GeneratedFile, value *protogen.EnumValue, last bool) {
+	if last {
+		g.P("\t", value.Comments.Leading,
+			"\t", value.Desc.Name(), " = ", value.Desc.Number())
+	} else {
+		g.P("\t", value.Comments.Leading,
+			"\t", value.Desc.Name(), " = ", value.Desc.Number(), ", ")
+	}
+}
+
+func genMessages(g *protogen.GeneratedFile, message *protogen.Message) {
+	g.P(message.Comments.Leading, "enum ", message.GoIdent.GoName)
+	g.P("{")
+	last := len(message.Fields) - 1
+	for idx, field := range message.Fields {
+		if idx != last {
+			g.P("\t", genField(field), ",")
+		} else {
+			g.P("\t", genField(field))
+		}
+	}
+	g.P("};")
+	g.P()
+}
+
+func genField(field *protogen.Field) string {
+	var builder strings.Builder
+	prefix, array, message := getFieldInfo(field)
+	builder.WriteString(prefix)
+	builder.WriteRune('e')
+	builder.WriteString(field.GoName)
+	for i := 0; i < array; i++ {
+		builder.WriteString("[256]") //TODO: dowolne wielkosci tablic
+	}
+	if message {
+		//TODO: problem z tablicą obiektów
+		//builder.WriteRune('[')
+		//builder.WriteString(field.Message.GoIdent.GoName)
+		//builder.WriteRune(']')
+		builder.WriteString(field.Message.GoIdent.GoName + "_messageId") // tymczasowe rozwiązanie
+	}
+	return builder.String()
 }
 
 func genNatives(g *protogen.GeneratedFile, service *protogen.Service) {
@@ -64,7 +121,7 @@ func genNativeParams(method *protogen.Method) string {
 	return out[:len(out)-2]
 }
 
-func getParamsInfo(param *protogen.Field) (prefix string, array int, message bool) {
+func getFieldInfo(param *protogen.Field) (prefix string, array int, message bool) {
 	array = 0
 	switch param.Desc.Kind() {
 	case protoreflect.EnumKind:
@@ -76,9 +133,7 @@ func getParamsInfo(param *protogen.Field) (prefix string, array int, message boo
 	case protoreflect.BytesKind:
 		array += 1
 	case protoreflect.MessageKind:
-		prefix = param.Message.GoIdent.GoName + ":"
 		message = true
-		//TODO: recursive message fields extraction
 	case protoreflect.GroupKind:
 		//deprecated
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Uint32Kind,
@@ -100,7 +155,7 @@ func getParamsInfo(param *protogen.Field) (prefix string, array int, message boo
 }
 
 func genParam(builder *strings.Builder, param *protogen.Field, inputParam bool) {
-	prefix, array, message := getParamsInfo(param)
+	prefix, array, message := getFieldInfo(param)
 	if array == 0 && !inputParam {
 		builder.WriteRune('&')
 	}
@@ -119,20 +174,6 @@ func genParam(builder *strings.Builder, param *protogen.Field, inputParam bool) 
 	}
 }
 
-func genEnum(g *protogen.GeneratedFile, enum *protogen.Enum) {
-	g.P(enum.Comments.Leading, "enum ", enum.Desc.Name())
-	g.P("{")
-	for idx, value := range enum.Values {
-		genEnumValue(g, value, idx == len(enum.Values)-1)
-	}
-	g.P("};")
-}
+func genCallbacks(g *protogen.GeneratedFile, service *protogen.Service) {
 
-func genEnumValue(g *protogen.GeneratedFile, value *protogen.EnumValue, last bool) {
-	if last {
-		g.P(value.Comments.Leading, "\t", value.Desc.Name(), " = ", value.Desc.Number())
-	} else {
-		g.P(value.Comments.Leading,
-			"\t", value.Desc.Name(), " = ", value.Desc.Number(), ", ")
-	}
 }

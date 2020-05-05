@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package = "test;example";
+
 message Donkey {
     string hi = 1;
 }

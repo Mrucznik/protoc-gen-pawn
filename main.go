@@ -16,6 +16,24 @@
 
 package main
 
-func main() {
+import (
+	"bytes"
+	"fmt"
+	"os"
+)
 
+func main() {
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(os.Stdin)
+	if err != nil {
+		panic(fmt.Errorf("error reading from stdin: %v", err))
+	}
+	//out, err := codeGenerator(buf.Bytes())
+	//if err != nil {
+	//	panic(err)
+	//}
+	_, err = os.Stdout.Write(buf.Bytes())
+	if err != nil {
+		panic(fmt.Errorf("error writing to stdout: %v", err))
+	}
 }

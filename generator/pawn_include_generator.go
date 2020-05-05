@@ -61,9 +61,9 @@ func genMessages(g *protogen.GeneratedFile, message *protogen.Message) {
 	last := len(message.Fields) - 1
 	for idx, field := range message.Fields {
 		if idx != last {
-			g.P("\t", genField(field), ",")
+			g.P("\t", field.Comments.Leading, "\t", genField(field), ",")
 		} else {
-			g.P("\t", genField(field))
+			g.P("\t", field.Comments.Leading, "\t", genField(field))
 		}
 	}
 	g.P("};")
@@ -76,6 +76,9 @@ func genField(field *protogen.Field) string {
 	builder.WriteString(prefix)
 	builder.WriteRune('e')
 	builder.WriteString(field.GoName)
+	if message {
+		builder.WriteString("_msg")
+	}
 	for i := 0; i < array; i++ {
 		builder.WriteString("[256]") //TODO: dowolne wielkosci tablic
 	}
@@ -84,7 +87,6 @@ func genField(field *protogen.Field) string {
 		//builder.WriteRune('[')
 		//builder.WriteString(field.Message.GoIdent.GoName)
 		//builder.WriteRune(']')
-		builder.WriteString(field.Message.GoIdent.GoName + "_messageId") // tymczasowe rozwiązanie
 	}
 	return builder.String()
 }

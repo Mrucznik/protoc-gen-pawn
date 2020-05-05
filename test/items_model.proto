@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package mruv;
+
+option go_package = "test;example";
+
+//Item type data structure
+message ItemType {
+    uint32 id = 1;
+
+    //Short name of item type.
+    string name = 2 ;
+
+    //Description of item type.
+    string description = 3;
+
+    //Default weight of items created with that item type.
+    float base_weight = 4;
+
+    //Default volume of items created with that item type.
+    float base_volume = 5;
+
+    //GTA V model name.
+    string model_name = 6;
+
+    //GTA V model hash.
+    int32 model_hash = 7;
+}
+
+//Item type ID.
+message ItemTypeID {
+    uint32 id = 1;
+}
+
+//Item data structure.
+message Item {
+    uint32 id = 1;
+
+    //ID of an item type.
+    uint32 item_type_id = 2;
+
+    //Current weight of the item.
+    float weight = 3;
+
+    //Current volume of the item.
+    float volume = 4;
+}
+
+//Item ID.
+message ItemID {
+    uint32 id = 1;
+}
+
+//Container type data structure.
+message ContainerType {
+    uint32 id = 1;
+
+    //ID of an item type.
+    uint32 container_item_type_id = 2;
+
+    //Max items in the container.
+    uint32 max_number = 3;
+
+    //Max volume of items in the container.
+    float max_volume = 4;
+
+    //Max weight of items in the container.
+    float max_weight = 5;
+
+    repeated int64 valid_item_types = 8;
+}
+
+//Container type ID.
+message ContainerTypeID {
+    uint32 id = 1;
+}
+
+//Container data structure.
+message Container {
+    uint32 id = 1;
+
+    //ID of an container type.
+    uint32 type_id = 2;
+
+    //ID of container item representing container.
+    uint32 item_id = 3;
+
+    //Number of items inside container.
+    uint32 items_inside = 4;
+
+    //List of items inside container.
+    repeated InsideItem items = 5;
+}
+
+//Container ID.
+message ContainerID {
+    uint32 id = 1;
+}
+
+//Item inside container data structure.
+message InsideItem {
+    //ID of container containing the item.
+    uint32 container_id = 1;
+
+    //ID of the item or the whole item.
+    oneof item_or_id {
+        uint32 item_id = 2;
+        Item item = 3;
+    }
+
+    //Position representing order in container. In ascending manner.
+    int32 position = 4;
+}
+
+//Sorting modes for container items.
+enum SortingMode {
+    //undefined behaviour
+    UNKNOWN = 0;
+    //sort by weight descending
+    WEIGHT_DESC = 1;
+    //sort by weight ascending
+    WEIGHT_ASC = 2;
+    //sort by volume descending
+    VOLUME_DESC = 3;
+    //sort by volume ascending
+    VOLUME_ASC = 4;
+}

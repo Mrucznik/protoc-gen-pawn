@@ -27,7 +27,7 @@ import (
 func main() {
 	var (
 		flags        flag.FlagSet
-		plugins      = flags.String("plugins", "", "list of plugins to enable (supported values: grpc)")
+		plugins      = flags.String("plugins", "", "list of plugins to enable (supported values: natives)")
 		importPrefix = flags.String("import_prefix", "", "prefix to prepend to import paths")
 	)
 	importRewriteFunc := func(importPath protogen.GoImportPath) protogen.GoImportPath {
@@ -44,11 +44,11 @@ func main() {
 		ParamFunc:         flags.Set,
 		ImportRewriteFunc: importRewriteFunc,
 	}.Run(func(gen *protogen.Plugin) error {
-		grpc := false
+		natives := false
 		for _, plugin := range strings.Split(*plugins, ",") {
 			switch plugin {
-			case "grpc":
-				grpc = true
+			case "natives":
+				natives = true
 			case "":
 			default:
 				return fmt.Errorf("protoc-gen-go: unknown plugin %q", plugin)
@@ -59,9 +59,8 @@ func main() {
 				continue
 			}
 			generator.GenerateFile(gen, f)
-			if grpc {
-				//TODO
-				//gengogrpc.GenerateFileContent(gen, f, g)
+			if natives {
+				generator.GenerateNativeFiles(gen, f)
 			}
 		}
 		gen.SupportedFeatures = generator.SupportedFeatures

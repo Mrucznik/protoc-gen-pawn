@@ -1,0 +1,209 @@
+syntax = "proto3";
+
+package mruv;
+
+option go_package = "test;example";
+
+import "test/items_model.proto";
+
+// The MruV items service provides procedures for managing items and containers
+service MruVItemService {
+    //Create new item.
+    rpc CreateItem (Item) returns (ItemID);
+
+    //Get item by id.
+    rpc GetItem (ItemID) returns (Item);
+
+    //Delete item by id.
+    rpc DeleteItem (ItemID) returns (ItemID);
+
+    //Gets all items.
+    rpc GetItems(GetItemsRequest) returns (GetItemsResponse);
+
+    //Create item type.
+    rpc CreateItemType (ItemType) returns (ItemTypeID);
+
+    //Get item type by id.
+    rpc GetItemType (ItemTypeID) returns (ItemType);
+
+    //Delete item type by id.
+    rpc DeleteItemType (ItemTypeID) returns (ItemTypeID);
+
+    //Gets all item types.
+    rpc GetItemTypes(GetItemTypesRequest) returns (GetItemTypesResponse);
+
+    //Create container.
+    rpc CreateContainer (Container) returns (ContainerID);
+
+    //Get container by id.
+    rpc GetContainer (ContainerID) returns (Container);
+
+    //Delete container by id.
+    rpc DeleteContainer (ContainerID) returns (ContainerID);
+
+    //Get all containers.
+    rpc GetContainers(GetContainersRequest) returns (GetContainersResponse);
+
+    //Create container type.
+    rpc CreateContainerType (ContainerType) returns (ContainerTypeID);
+
+    //Get container type by id.
+    rpc GetContainerType (ContainerTypeID) returns (ContainerType);
+
+    //Detele container type by id.
+    rpc DeleteContainerType (ContainerTypeID) returns (ContainerTypeID);
+
+    //Get all container types.
+    rpc GetContainerTypes(GetContainerTypesRequest) returns (GetContainerTypesResponse);
+
+    //Get items inside a container.
+    rpc GetContainerItems(GetContainerItemsRequest) returns (GetContainerItemsResponse);
+
+    //Pull item from container.
+    rpc PullItem(PullItemRequest) returns (Item);
+
+    //Put item into container.
+    rpc PutItem(PutItemRequest) returns (PutItemResponse);
+
+    //Sort items inside container.
+    //This procedure change order of items inside container.
+    rpc SortItems(SortItemsRequest) returns (SortItemsResponse);
+
+    //Retrieves from the container the list of items nearest to the given position.
+    rpc GetNearestItems(GetNearestItemsRequest) returns (GetNearestItemsResponse);
+
+    //Trigger action associated with the item usage.
+    rpc UseItem(UseItemRequest) returns (UseItemResponse);
+}
+
+
+// Request message for `MruVItemsService.GetItems`.
+message GetItemsRequest {
+    // Limit of the returned items.
+    uint32 limit = 1;
+}
+
+// Response message for `MruVItemsService.GetItems`.
+message GetItemsResponse {
+    // List of items.
+    repeated Item items = 1;
+}
+// Request message for `MruVItemsService.GetItemTypes`.
+message GetItemTypesRequest {
+    // Limit of the returned item types.
+    uint32 limit = 1;
+}
+
+//Response message for `MruVItemsService.GetItemTypes`.
+message GetItemTypesResponse {
+    //List of item types.
+    repeated ItemType item_types = 1;
+}
+
+//Request message for `MruVItemsService.GetContainers`.
+message GetContainersRequest {
+    //Limit of the returned containers.
+    uint32 limit = 1;
+}
+
+//Response message for `MruVItemsService.GetContainers`.
+message GetContainersResponse {
+    //List of containers.
+    repeated Container containers = 1;
+}
+
+//Request message for `MruVItemsService.GetContainerTypes`.
+message GetContainerTypesRequest {
+    //Limit of the returned container types.
+    uint32 limit = 1;
+}
+
+//Response message for `MruVItemsService.GetContainers`.
+message GetContainerTypesResponse {
+    //List of container types.
+    repeated ContainerType container_types = 1;
+}
+
+//Request message for `MruVItemsService.PutItem`.
+message PutItemRequest {
+    //ID of container where to put item.
+    uint32 container_id = 1;
+
+    //ID of item we wan to put in.
+    uint32 item_id = 2;
+
+    oneof where {
+        //Position used for sorting items
+        int32 slot = 3;
+    }
+}
+
+//Response message for `MruVItemsService.PutItem`
+message PutItemResponse {
+    //Container with items inside.
+    InsideItem inside_item = 1;
+}
+
+//Request message for `MruVItemsService.GetContainerItems`.
+message GetContainerItemsRequest {
+    //ID of container with items.
+    uint32 container_id = 1;
+    //Limit of the returned items.
+    uint32 limit = 2;
+}
+
+//Request message for `MruVItemsService.GetContainerItems`.
+message GetContainerItemsResponse {
+    //List of items inside containers.
+    repeated InsideItem items = 1;
+}
+
+//Request message for `MruVItemsService.PullItem`.
+message PullItemRequest {
+    //ID of the container from which we pull out a item.
+    uint32 container_id = 1;
+    //ID of the item we want to pull out.
+    //That item must be inside the container.
+    uint32 item_id = 2;
+}
+
+//Request message for `MruVItemsService.SortItems`.
+message SortItemsRequest {
+    //ID of the container which contain items.
+    uint32 container_id = 1;
+    //Sorting mode.
+    SortingMode sort_by = 2;
+}
+
+//Response message for `MruVItemsService.SortItems`.
+message SortItemsResponse {
+    //Container with sorted items inside.
+    Container container = 1;
+}
+
+//Request message for `MruVItemsService.GetNearestItems`.
+message GetNearestItemsRequest {
+    //Position from which to calculate the distance
+    //Position position = 1;
+    //ID of container that contains items.
+    uint32 container_id = 2;
+    //The distance over which the items are ignored.
+    double distance_limit = 3;
+}
+
+//Response message for `MruVItemsService.GetNearestItems`.
+message GetNearestItemsResponse {
+    //List of items sorted from nearest to farthest.
+    repeated InsideItem item = 1;
+}
+
+//Request message for `MruVItemsService.UseItem`.
+message UseItemRequest {
+    uint32 item_id = 1;
+}
+
+//Response message for `MruVItemsService.UseItem`.
+message UseItemResponse {
+    //Is item usage was successful.
+    bool success = 1;
+}

@@ -1,0 +1,40 @@
+{{define "native_parameters"}}ONE{{end}}
+{{define "native_parameters_symbols"}}ONE{{end}}
+
+// native {{native_name}}({{template "native_parameters" params}});
+cell Natives::{{native_name}}(AMX *amx, cell *params) {
+    //ScopedDebugInfo dbg_info(amx, "{{native_name}}", params, "{{template "native_parameters_symbols" params}}");
+
+    {{request_type}} request;
+    {{response_type}} response;
+    ClientContext context;
+
+    {{if request_params}}
+        // construct request from params
+        {{range request_params}}
+            request.set_name(amx_GetCppString(amx, params[2]));
+            request.set_description(amx_GetCppString(amx, params[3]));
+            request.set_base_weight(params[4]);
+            request.set_base_volume(params[5]);
+            request.set_model_hash(params[6]);
+        {{end}}
+    {{end}}
+
+    // RPC call.
+    Status status = API::Get().{{service_name}}Stub()->{{rpc_name}}(&context, request, &response);
+    API::Get().setLastStatus(status);
+
+    {{if response_params}}
+        // convert response to amx structure
+        if(status.ok())
+        {
+            {{range response_params}}
+                cell* addr = NULL;
+                amx_GetAddr(amx, params[1], &addr);
+                *addr = response.id();
+            {{end}}
+        }
+    {{end}}
+
+    return status.ok();
+}

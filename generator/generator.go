@@ -9,12 +9,40 @@ import (
 
 var SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 
+//
+func GenerateNativeFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
+	filename := file.GeneratedFilenamePrefix + "_natives.cpp"
+	g := gen.NewGeneratedFile(filename, file.GoImportPath)
+
+	g.P("some shit")
+
+	return g
+}
+
 // GenerateFile generates the contents of a .pb.go file.
 func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	filename := file.GeneratedFilenamePrefix + ".pb.pwn"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 
 	genGeneratedHeader(gen, g)
+
+	g.P("// Enums")
+	for _, enum := range file.Enums {
+		genEnum(g, enum)
+	}
+	g.P()
+
+	g.P("// Messages")
+	for _, message := range file.Messages {
+		genMessage(gen, g, message)
+	}
+	g.P()
+
+	g.P("// Services")
+	for _, service := range file.Services {
+		genService(gen, g, service)
+	}
+	g.P()
 	return g
 }
 
@@ -31,4 +59,30 @@ func genGeneratedHeader(gen *protogen.Plugin, g *protogen.GeneratedFile) {
 	g.P("// \tprotoc          ", protocVersion)
 
 	g.P()
+}
+
+func genEnum(g *protogen.GeneratedFile, enum *protogen.Enum) {
+	g.P(enum.Comments.Leading, "enum ", enum.Desc.Name())
+	g.P("{")
+	for idx, value := range enum.Values {
+		genEnumValue(g, value, idx == len(enum.Values)-1)
+	}
+	g.P("};")
+}
+
+func genEnumValue(g *protogen.GeneratedFile, value *protogen.EnumValue, last bool) {
+	if last {
+		g.P(value.Comments.Leading, "\t", value.Desc.Name(), " = ", value.Desc.Number())
+	} else {
+		g.P(value.Comments.Leading,
+			"\t", value.Desc.Name(), " = ", value.Desc.Number(), ", ")
+	}
+}
+
+func genMessage(gen *protogen.Plugin, g *protogen.GeneratedFile, message *protogen.Message) {
+	g.P(message.Comments.Leading)
+}
+
+func genService(gen *protogen.Plugin, g *protogen.GeneratedFile, service *protogen.Service) {
+	g.P(service.Comments.Leading)
 }

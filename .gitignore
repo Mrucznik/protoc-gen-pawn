@@ -20,6 +20,7 @@ protoc-gen-pawn
 # Goland files
 .idea
 
-# Generated .pwn and .amx files
+# Generated .cpp, .pwn and .amx files
+*.cpp
 *.pwn
 *.amx

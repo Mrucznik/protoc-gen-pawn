@@ -97,14 +97,18 @@ func genNatives(g *protogen.GeneratedFile, service *protogen.Service) {
 	for _, method := range service.Methods {
 		g.P(method.Comments.Leading,
 			"native bool:",
-			strings.ToLower(extractCapitals(service.GoName)), "_", method.GoName,
-			"(", genNativeParams(method), ");",
+			getNativeName(service, method),
+			"(", getNativeParams(method), ");",
 			method.Comments.Trailing)
 		g.P()
 	}
 }
 
-func genNativeParams(method *protogen.Method) string {
+func getNativeName(service *protogen.Service, method *protogen.Method) string {
+	return fmt.Sprintf("%s_%s", strings.ToLower(extractCapitals(service.GoName)), method.GoName)
+}
+
+func getNativeParams(method *protogen.Method) string {
 	var strBuilder strings.Builder
 
 	//input params

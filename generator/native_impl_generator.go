@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"log"
@@ -25,36 +26,20 @@ cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
     {{.RequestType}} request;
     {{.ResponseType}} response;
     ClientContext context;
-
     {{if .RequestParams}}
 	// construct request from params
-	{{.RequestParams}}
-    {{end}}
-
+{{.RequestParams}}{{end}}
     // RPC call.
     Status status = API::Get().{{.ServiceName}}Stub()->{{.RPCName}}(&context, request, &response);
     API::Get().setLastStatus(status);
-
     {{if .ResponseParams}}
 	// convert response to amx structure
 	if(status.ok())
 	{
-		{{.ResponseParams}}
-	}
-    {{end}}
-
+{{.ResponseParams}}
+	}{{end}}
     return status.ok();
 }`
-
-const xd = `
-            request.set_name(amx_GetCppString(amx, params[2]));
-            request.set_description(amx_GetCppString(amx, params[3]));
-            request.set_base_weight(params[4]);
-            request.set_base_volume(params[5]);
-            request.set_model_hash(params[6]);`
-const xdd = `cell* addr = NULL;
-                amx_GetAddr(amx, params[1], &addr);
-                *addr = response.id();`
 
 // GenerateNativeFile generates the contents of a _natives.cpp file.
 // This file contains code that provides translation for pawn native call -> grpc call
@@ -79,11 +64,12 @@ func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Gen
 				NativeName:     getNativeName(service, method),
 				NativeParams:   getNativeParams(method),
 				RequestParams:  getInputFieldsCode(method.Input.Fields),
-				ResponseParams: getOutputFieldsCode(method.Output.Fields),
+				ResponseParams: getOutputFieldsCode(method.Output.Fields, len(method.Input.Fields)),
 			})
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
 			}
+			g.P()
 		}
 	}
 
@@ -93,51 +79,69 @@ func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Gen
 func getInputFieldsCode(fields []*protogen.Field) string {
 	var builder strings.Builder
 
-	for _, field := range fields {
+	for idx, field := range fields {
 		switch field.Desc.Kind() {
 		case protoreflect.EnumKind:
-
+			builder.WriteString(fmt.Sprintf("\trequest.set_%s(static_cast<%s>(params[%d]));\n",
+				field.Desc.Name(), field.Enum.Desc.Name(), idx+1))
 		case protoreflect.FloatKind, protoreflect.DoubleKind:
-
+			builder.WriteString(fmt.Sprintf("\trequest.set_%s(amx_ctof(params[%d]));\n",
+				field.Desc.Name(), idx+1))
 		case protoreflect.StringKind:
-
+			builder.WriteString(fmt.Sprintf("\trequest.set_%s(amx_GetCppString(amx, params[%d]));\n",
+				field.Desc.Name(), idx+1))
 		case protoreflect.BytesKind:
-
+			builder.WriteString("\t// TODO: bytes\n")
 		case protoreflect.MessageKind:
-
+			builder.WriteString("\t// TODO: message\n")
 		case protoreflect.GroupKind:
 			//deprecated, do nothing
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Uint32Kind,
 			protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Uint64Kind,
 			protoreflect.Sfixed32Kind, protoreflect.Fixed32Kind,
 			protoreflect.Sfixed64Kind, protoreflect.Fixed64Kind:
+			builder.WriteString(fmt.Sprintf("\trequest.set_%s(params[%d]);\n",
+				field.Desc.Name(), idx+1))
 		}
 	}
 
 	return builder.String()
 }
 
-func getOutputFieldsCode(fields []*protogen.Field) string {
+func getOutputFieldsCode(fields []*protogen.Field, beginIndex int) string {
 	var builder strings.Builder
 
-	for _, field := range fields {
+	builder.WriteString("\t\tcell* addr = NULL;\n")
+	for idx, field := range fields {
 		switch field.Desc.Kind() {
-		case protoreflect.EnumKind:
-
 		case protoreflect.FloatKind, protoreflect.DoubleKind:
-
+			builder.WriteString(fmt.Sprintf(
+				"\t\tamx_GetAddr(amx, params[%d], &addr);\n"+
+					"\t\t*addr = amx_ftoc(response.%s());\n",
+				idx+1+beginIndex, field.Desc.Name()))
 		case protoreflect.StringKind:
-
+			builder.WriteString(fmt.Sprintf(
+				"\t\tamx_SetCppString(amx, params[%d], response.%s(), 256);\n",
+				idx+1+beginIndex, field.Desc.Name()))
 		case protoreflect.BytesKind:
-
+			builder.WriteString("\t\t// TODO: bytes\n")
 		case protoreflect.MessageKind:
-
+			builder.WriteString("\t\t// TODO: message\n")
 		case protoreflect.GroupKind:
 			//deprecated, do nothing
-		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Uint32Kind,
+		case protoreflect.EnumKind,
+			protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Uint32Kind,
 			protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Uint64Kind,
 			protoreflect.Sfixed32Kind, protoreflect.Fixed32Kind,
 			protoreflect.Sfixed64Kind, protoreflect.Fixed64Kind:
+			builder.WriteString(fmt.Sprintf(
+				"\t\tamx_GetAddr(amx, params[%d], &addr);\n"+
+					"\t\t*addr = response.%s();\n",
+				idx+1+beginIndex, field.Desc.Name()))
+		}
+
+		if field.Desc.IsList() || field.Desc.IsMap() {
+			builder.WriteString("\t\t// todo: list/map\n")
 		}
 	}
 

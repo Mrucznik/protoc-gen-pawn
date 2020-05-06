@@ -47,7 +47,7 @@ func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Gen
 	filename := file.GeneratedFilenamePrefix + "_natives.cpp"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 
-	genGeneratedHeader(gen, g)
+	//genGeneratedHeader(gen, g)
 
 	tmpl, err := template.New("cppNative").Parse(CppNativeTemplate)
 	if err != nil {
@@ -80,6 +80,16 @@ func getInputFieldsCode(fields []*protogen.Field) string {
 	var builder strings.Builder
 
 	for idx, field := range fields {
+		if field.Desc.IsList() {
+			builder.WriteString("\t\t// todo: list\n")
+			continue
+		}
+
+		if field.Desc.IsMap() {
+			builder.WriteString("\t\t// todo: map\n")
+			continue
+		}
+
 		switch field.Desc.Kind() {
 		case protoreflect.EnumKind:
 			builder.WriteString(fmt.Sprintf("\trequest.set_%s(static_cast<%s>(params[%d]));\n",
@@ -113,12 +123,23 @@ func getOutputFieldsCode(fields []*protogen.Field, beginIndex int) string {
 
 	builder.WriteString("\t\tcell* addr = NULL;\n")
 	for idx, field := range fields {
+		if field.Desc.IsList() {
+			builder.WriteString("\t\t// todo: list\n")
+			continue
+		}
+
+		if field.Desc.IsMap() {
+			builder.WriteString("\t\t// todo: map\n")
+			continue
+		}
+
 		switch field.Desc.Kind() {
 		case protoreflect.FloatKind, protoreflect.DoubleKind:
 			builder.WriteString(fmt.Sprintf(
 				"\t\tamx_GetAddr(amx, params[%d], &addr);\n"+
-					"\t\t*addr = amx_ftoc(response.%s());\n",
-				idx+1+beginIndex, field.Desc.Name()))
+					"\t\tfloat %s = response.%s();\n"+
+					"\t\t*addr = amx_ftoc(%s);\n",
+				idx+1+beginIndex, field.Desc.Name(), field.Desc.Name(), field.Desc.Name()))
 		case protoreflect.StringKind:
 			builder.WriteString(fmt.Sprintf(
 				"\t\tamx_SetCppString(amx, params[%d], response.%s(), 256);\n",
@@ -138,10 +159,6 @@ func getOutputFieldsCode(fields []*protogen.Field, beginIndex int) string {
 				"\t\tamx_GetAddr(amx, params[%d], &addr);\n"+
 					"\t\t*addr = response.%s();\n",
 				idx+1+beginIndex, field.Desc.Name()))
-		}
-
-		if field.Desc.IsList() || field.Desc.IsMap() {
-			builder.WriteString("\t\t// todo: list/map\n")
 		}
 	}
 

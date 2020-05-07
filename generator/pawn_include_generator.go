@@ -7,9 +7,8 @@ import (
 	"strings"
 )
 
-func GenerateIncludeFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
-	filename := file.GeneratedFilenamePrefix + ".inc"
-	g := gen.NewGeneratedFile(filename, file.GoImportPath)
+func GenerateIncludeEnumFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
+	g := gen.NewGeneratedFile(file.GeneratedFilenamePrefix+"_enums.inc", file.GoImportPath)
 
 	genGeneratedHeader(gen, g)
 
@@ -23,6 +22,11 @@ func GenerateIncludeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Ge
 		genMessages(g, message)
 	}
 
+	return g
+}
+
+func GenerateIncludeNativesFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
+	g := gen.NewGeneratedFile(file.GeneratedFilenamePrefix+"_natives.inc", file.GoImportPath)
 	g.P("// ---------- Natives ----------")
 	for _, service := range file.Services {
 		genNatives(g, service)
@@ -32,7 +36,6 @@ func GenerateIncludeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Ge
 	for _, service := range file.Services {
 		genCallbacks(g, service)
 	}
-
 	return g
 }
 
@@ -124,7 +127,10 @@ func getNativeParams(method *protogen.Method) string {
 	}
 
 	out := strBuilder.String()
-	return out[:len(out)-2]
+	if len(out) > 2 {
+		return out[:len(out)-2]
+	}
+	return out
 }
 
 func getFieldInfo(param *protogen.Field) (prefix string, array int, message bool) {

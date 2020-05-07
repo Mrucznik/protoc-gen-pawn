@@ -41,6 +41,22 @@ cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
     return status.ok();
 }`
 
+func GenerateNativeDefinitions(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
+	filename := file.GeneratedFilenamePrefix + "_native_definitions.cpp"
+	g := gen.NewGeneratedFile(filename, file.GoImportPath)
+
+	for _, service := range file.Services {
+		for _, method := range service.Methods {
+			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+				continue
+			}
+			g.P(fmt.Sprintf("AMX_DEFINE_NATIVE(%s)", getNativeName(service, method)))
+		}
+	}
+
+	return g
+}
+
 // GenerateNativeFile generates the contents of a _natives.cpp file.
 // This file contains code that provides translation for pawn native call -> grpc call
 func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -56,6 +72,9 @@ func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Gen
 
 	for _, service := range file.Services {
 		for _, method := range service.Methods {
+			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+				continue
+			}
 			err = tmpl.Execute(g, cppNativeTemplateParams{
 				ServiceName:    service.GoName,
 				RPCName:        method.GoName,

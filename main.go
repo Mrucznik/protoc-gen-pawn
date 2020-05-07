@@ -58,8 +58,10 @@ func main() {
 			if !f.Generate {
 				continue
 			}
+			generator.GenerateIncludeEnumFiles(gen, f)
+			generator.GenerateIncludeNativesFiles(gen, f)
 			generator.GenerateNativeFile(gen, f)
-			generator.GenerateIncludeFile(gen, f)
+			generator.GenerateNativeDefinitions(gen, f)
 			if natives {
 			}
 		}

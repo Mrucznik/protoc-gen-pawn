@@ -168,7 +168,7 @@ func getFieldInfo(param *protogen.Field) (prefix string, array int, message bool
 
 func genParam(builder *strings.Builder, param *protogen.Field, inputParam bool) {
 	prefix, array, message := getFieldInfo(param)
-	if array == 0 && !inputParam {
+	if array == 0 && !inputParam && !message {
 		builder.WriteRune('&')
 	}
 	if inputParam {

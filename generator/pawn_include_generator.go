@@ -144,9 +144,7 @@ func getFieldInfo(param *protogen.Field) (prefix string, array int, message bool
 		prefix = param.Enum.GoIdent.GoName + ":"
 	case protoreflect.FloatKind, protoreflect.DoubleKind:
 		prefix = "Float:"
-	case protoreflect.StringKind:
-		array += 1
-	case protoreflect.BytesKind:
+	case protoreflect.StringKind, protoreflect.BytesKind:
 		array += 1
 	case protoreflect.MessageKind:
 		message = true

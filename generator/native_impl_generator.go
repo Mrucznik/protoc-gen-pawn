@@ -146,11 +146,9 @@ func getInputFieldsCode(fields []*protogen.Field) string {
 		case protoreflect.FloatKind, protoreflect.DoubleKind:
 			builder.WriteString(fmt.Sprintf("\trequest.set_%s(amx_ctof(params[%d]));\n",
 				field.Desc.Name(), idx+1))
-		case protoreflect.StringKind:
+		case protoreflect.StringKind, protoreflect.BytesKind:
 			builder.WriteString(fmt.Sprintf("\trequest.set_%s(amx_GetCppString(amx, params[%d]));\n",
 				field.Desc.Name(), idx+1))
-		case protoreflect.BytesKind:
-			builder.WriteString("\t// TODO: bytes\n")
 		case protoreflect.MessageKind:
 			builder.WriteString("\t// TODO: message\n")
 		case protoreflect.GroupKind:
@@ -189,12 +187,10 @@ func getOutputFieldsCode(fields []*protogen.Field, beginIndex int) string {
 					"\t\tfloat %s = response.%s();\n"+
 					"\t\t*addr = amx_ftoc(%s);\n",
 				idx+1+beginIndex, field.Desc.Name(), field.Desc.Name(), field.Desc.Name()))
-		case protoreflect.StringKind:
+		case protoreflect.StringKind, protoreflect.BytesKind:
 			builder.WriteString(fmt.Sprintf(
 				"\t\tamx_SetCppString(amx, params[%d], response.%s(), 256);\n",
 				idx+1+beginIndex, field.Desc.Name()))
-		case protoreflect.BytesKind:
-			builder.WriteString("\t\t// TODO: bytes\n")
 		case protoreflect.MessageKind:
 			builder.WriteString("\t\t// TODO: message\n")
 		case protoreflect.GroupKind:

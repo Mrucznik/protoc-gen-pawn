@@ -31,7 +31,7 @@ cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
 {{.RequestParams}}{{end}}
     // RPC call.
     Status status = API::Get()->{{.ServiceName}}Stub()->{{.RPCName}}(&context, request, &response);
-    API::Get().setLastStatus(status);
+    API::Get()->setLastStatus(status);
     {{if .ResponseParams}}
 	// convert response to amx structure
 	if(status.ok())

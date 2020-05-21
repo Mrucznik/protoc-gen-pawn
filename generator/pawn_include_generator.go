@@ -10,7 +10,7 @@ import (
 func GenerateIncludeEnumFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	g := gen.NewGeneratedFile(file.GeneratedFilenamePrefix+"_enums.inc", file.GoImportPath)
 
-	genGeneratedHeader(gen, g)
+	//genGeneratedHeader(gen, g)
 
 	if len(file.Enums) > 0 {
 		g.P("// ---------- Enums ----------")
@@ -32,19 +32,14 @@ func GenerateIncludeEnumFiles(gen *protogen.Plugin, file *protogen.File) *protog
 func GenerateIncludeNativesFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	g := gen.NewGeneratedFile(file.GeneratedFilenamePrefix+"_natives.inc", file.GoImportPath)
 
-	if len(file.Services) > 0 {
-		g.P("// ---------- Natives ----------")
-		for _, service := range file.Services {
-			genNatives(g, service)
-		}
+	for _, service := range file.Services {
+		genNatives(g, service)
 	}
 
-	if len(file.Services) > 0 {
-		g.P("// ---------- Callbacks ----------")
-		for _, service := range file.Services {
-			genCallbacks(g, service)
-		}
+	for _, service := range file.Services {
+		genCallbacks(g, service)
 	}
+
 	return g
 }
 
@@ -104,8 +99,8 @@ func genField(field *protogen.Field) string {
 }
 
 func genNatives(g *protogen.GeneratedFile, service *protogen.Service) {
+	g.P("// ----- ", service.GoName, " Natives -----")
 	g.P(service.Comments.Leading)
-	g.P("// ----- ", service.GoName, " -----")
 	for _, method := range service.Methods {
 		g.P(method.Comments.Leading,
 			"native bool:",

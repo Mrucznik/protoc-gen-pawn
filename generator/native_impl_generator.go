@@ -170,7 +170,7 @@ func getInputFieldsCode(fields []*protogen.Field) string {
 func getOutputFieldsCode(fields []*protogen.Field, beginIndex int) string {
 	var builder strings.Builder
 
-	builder.WriteString("\t\tcell* addr = NULL;\n")
+	builder.WriteString("\t\tcell* addr = nullptr;\n")
 	for idx, field := range fields {
 		if field.Desc.IsList() {
 			builder.WriteString("\t\t// todo: list\n")

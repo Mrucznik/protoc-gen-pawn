@@ -30,7 +30,7 @@ cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
 	// construct request from params
 {{.RequestParams}}{{end}}
     // RPC call.
-    Status status = API::Get().{{.ServiceName}}Stub()->{{.RPCName}}(&context, request, &response);
+    Status status = API::Get()->{{.ServiceName}}Stub()->{{.RPCName}}(&context, request, &response);
     API::Get().setLastStatus(status);
     {{if .ResponseParams}}
 	// convert response to amx structure
@@ -41,6 +41,32 @@ cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
     return status.ok();
 }`
 
+const CppAsyncNativeTemplate = `
+// native {{.NativeName}}Async({{.NativeParams}});
+cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
+	
+}`
+
+const CppNativeClientStreamingTemplate = `
+// native {{.NativeName}}({{.NativeParams}});
+cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
+	
+}`
+
+const CppNativeServerStreamingTemplate = `
+// native {{.NativeName}}({{.NativeParams}});
+cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
+	
+}`
+
+const CppNativeBidirectionalStreamingTemplate = `
+// native {{.NativeName}}({{.NativeParams}});
+cell Natives::{{.NativeName}}(AMX *amx, cell *params) {
+	
+}`
+
+// GenerateNativeDefinitions generates the content of _native_definitions.cpp
+// These files contains list of native definitions to paset in natives.hpp
 func GenerateNativeDefinitions(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	filename := file.GeneratedFilenamePrefix + "_native_definitions.cpp"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
@@ -57,8 +83,8 @@ func GenerateNativeDefinitions(gen *protogen.Plugin, file *protogen.File) *proto
 	return g
 }
 
-// GenerateNativeFile generates the contents of a _natives.cpp file.
-// This file contains code that provides translation for pawn native call -> grpc call
+// GenerateNativeFile generates the content of a _natives.cpp file.
+// These files contains code that provides translation for pawn native call -> grpc call
 func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	filename := file.GeneratedFilenamePrefix + "_natives.cpp"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
@@ -72,7 +98,11 @@ func GenerateNativeFile(gen *protogen.Plugin, file *protogen.File) *protogen.Gen
 
 	for _, service := range file.Services {
 		for _, method := range service.Methods {
-			if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+			if method.Desc.IsStreamingClient() && method.Desc.IsStreamingServer() {
+				continue
+			} else if method.Desc.IsStreamingClient() {
+				continue
+			} else if method.Desc.IsStreamingServer() {
 				continue
 			}
 			err = tmpl.Execute(g, cppNativeTemplateParams{

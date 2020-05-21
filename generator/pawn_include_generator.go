@@ -12,14 +12,18 @@ func GenerateIncludeEnumFiles(gen *protogen.Plugin, file *protogen.File) *protog
 
 	genGeneratedHeader(gen, g)
 
-	g.P("// ---------- Enums ----------")
-	for _, enum := range file.Enums {
-		genEnum(g, enum)
+	if len(file.Enums) > 0 {
+		g.P("// ---------- Enums ----------")
+		for _, enum := range file.Enums {
+			genEnum(g, enum)
+		}
 	}
 
-	g.P("// ---------- Messages ----------")
-	for _, message := range file.Messages {
-		genMessages(g, message)
+	if len(file.Messages) > 0 {
+		g.P("// ---------- Messages ----------")
+		for _, message := range file.Messages {
+			genMessages(g, message)
+		}
 	}
 
 	return g
@@ -27,14 +31,19 @@ func GenerateIncludeEnumFiles(gen *protogen.Plugin, file *protogen.File) *protog
 
 func GenerateIncludeNativesFiles(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
 	g := gen.NewGeneratedFile(file.GeneratedFilenamePrefix+"_natives.inc", file.GoImportPath)
-	g.P("// ---------- Natives ----------")
-	for _, service := range file.Services {
-		genNatives(g, service)
+
+	if len(file.Services) > 0 {
+		g.P("// ---------- Natives ----------")
+		for _, service := range file.Services {
+			genNatives(g, service)
+		}
 	}
 
-	g.P("// ---------- Callbacks ----------")
-	for _, service := range file.Services {
-		genCallbacks(g, service)
+	if len(file.Services) > 0 {
+		g.P("// ---------- Callbacks ----------")
+		for _, service := range file.Services {
+			genCallbacks(g, service)
+		}
 	}
 	return g
 }

@@ -4,7 +4,7 @@ option go_package = "test;example";
 
 // enum Leading comment
 enum Corpus {
-    UNIVERSAL = 0; //kek01
+    UNIVERSAL = 0; //enum trailing commnet
     WEB = 1;
     IMAGES = 2;
     LOCAL = 3;
@@ -25,4 +25,20 @@ message Funky {
     }
     Monkey monkey = 1;
     Donkey dokey = 2;
+}
+
+message SomeRPCRequest {
+    int32 id = 1;
+    string name = 2;
+}
+
+message SomeRPCResponse {
+    string result = 1;
+}
+
+service ExampleService {
+    rpc SomeRPC(SomeRPCRequest) returns (SomeRPCResponse);
+    rpc SomeRPClientStream(stream SomeRPCRequest) returns (SomeRPCResponse);
+    rpc SomeRPCServerStream(SomeRPCRequest) returns (stream SomeRPCResponse);
+    rpc SomeRPCBiDiStream(stream SomeRPCRequest) returns (stream SomeRPCResponse);
 }

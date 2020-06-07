@@ -63,7 +63,7 @@ func genEnumValue(g *protogen.GeneratedFile, value *protogen.EnumValue, last boo
 }
 
 func genMessages(g *protogen.GeneratedFile, message *protogen.Message) {
-	g.P(message.Comments.Leading, "enum ", message.GoIdent.GoName)
+	g.P(message.Comments.Leading, "enum e", message.GoIdent.GoName)
 	g.P("{")
 	last := len(message.Fields) - 1
 	for idx, field := range message.Fields {
